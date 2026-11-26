@@ -12,7 +12,7 @@
 :root{--paper:#f4efe6;--red:#e0303a}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:#0e0e13;overflow:hidden;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;font-family:'Zen Kaku Gothic New',system-ui,sans-serif;color:var(--paper)}
-canvas{position:fixed;inset:0;touch-action:none;display:block}
+canvas{position:fixed;inset:0;width:100%;height:100%;touch-action:none;display:block}
 #hud{position:fixed;pointer-events:none;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;z-index:2}
 #hud .l{display:flex;flex-direction:column;gap:1px;text-shadow:0 1px 3px rgba(0,0,0,.7)}
 #score{font-weight:900;font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
@@ -62,8 +62,8 @@ h2{font-family:'Zen Kaku Gothic New',system-ui,sans-serif;font-weight:900;font-s
 <div id="title" class="overlay">
   <div class="card">
     <h1>車窓の忍者</h1>
-    <button class="btn primary" id="bCam">カメラで遊ぶ <small>車窓にかざしてリアルタイム</small></button>
-    <button class="btn" id="bVideo">車窓動画で遊ぶ <small>撮った動画を選ぶ</small></button>
+    <button class="btn primary" id="bVideo">車窓動画で遊ぶ <small>撮った動画を選ぶ</small></button>
+    <button class="btn" id="bCam">カメラで遊ぶ <small>車窓にかざしてリアルタイム</small></button>
     <div id="tmsg" class="msg hidden"></div>
     <div class="how">タップ：ジャンプ（空中でもう一回）<br>下スワイプ：下のラインへ降りる</div>
     <div class="note" id="rot">横向きにすると窓が大きくなります</div>
@@ -142,11 +142,17 @@ const crows=[], parts=[], pops=[];
 let crowT=6, slAcc=0;
 
 /* ---------- 画面サイズ ---------- */
-function resize(){
-  DPR=Math.min(window.devicePixelRatio||1,2);
-  SW=innerWidth; SH=innerHeight;
+// 画面サイズは、全面に敷いたキャンバスの実寸から測る
+// （ホーム画面から起動した時など、起動直後の innerHeight が正しくない端末があるため）
+function viewSize(){
+  const r=cv.getBoundingClientRect();
+  return [Math.round(r.width)||innerWidth, Math.round(r.height)||innerHeight];
+}
+function resize(force){
+  const [w,h]=viewSize(), dpr=Math.min(window.devicePixelRatio||1,2);
+  if(force!==true&&w===SW&&h===SH&&dpr===DPR) return;
+  DPR=dpr; SW=w; SH=h;
   cv.width=Math.round(SW*DPR); cv.height=Math.round(SH*DPR);
-  cv.style.width=SW+'px'; cv.style.height=SH+'px';
   const a=SW/SH, amin=1.45, amax=2.3;
   if(a<amin){VW=SW;VH=SW/amin;}
   else if(a>amax){VH=SH;VW=SH*amax;}
@@ -1158,12 +1164,14 @@ window.addEventListener('keydown',e=>{
 });
 window.addEventListener('keyup',e=>{if(JK.includes(e.code))releaseJump();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&state==='play')togglePause();});
-window.addEventListener('resize',resize);
+window.addEventListener('resize',()=>resize());
+window.addEventListener('orientationchange',()=>setTimeout(()=>resize(),300));
+window.addEventListener('pageshow',()=>resize());
+if(window.visualViewport) visualViewport.addEventListener('resize',()=>resize());
+if(window.ResizeObserver) new ResizeObserver(()=>resize()).observe(cv);
+setInterval(()=>resize(),1000);   // 念のため1秒ごとに実寸を確認（変わっていなければ何もしない）
 
 // 既成コースはいったん非公開（コードは残してあり、ボタンを戻せば復活できる）
-// Claudeアプリ内などの埋め込み表示ではカメラが使えないので、動画を主役に入れ替える
-(()=>{let inFrame=true;try{inFrame=window.self!==window.top;}catch(e){}
-  if(inFrame){const c=$('bCam'),vb=$('bVideo');c.classList.remove('primary');vb.classList.add('primary');c.parentNode.insertBefore(vb,c);}})();
 $('bVideo').onclick=()=>{initAudio();$('file').click();};
 $('file').onchange=e=>{const f=e.target.files&&e.target.files[0];e.target.value='';if(f)startVideoFile(f);};
 $('bCam').onclick=startCamera;
@@ -1400,7 +1408,7 @@ function frame(now){
   render(); updHUD();
   if(state==='play'&&mode==='vision') recFrame();
 }
-resize(); resetWorld(); resetNinja(); showUI();
+resize(true); resetWorld(); resetNinja(); showUI();
 requestAnimationFrame(frame);
 })();
 </script>

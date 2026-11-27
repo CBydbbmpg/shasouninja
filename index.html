@@ -13,11 +13,16 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:#0e0e13;overflow:hidden;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;font-family:'Zen Kaku Gothic New',system-ui,sans-serif;color:var(--paper)}
 canvas{position:fixed;inset:0;width:100%;height:100%;touch-action:none;display:block}
-#hud{position:fixed;pointer-events:none;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;z-index:2}
+#hud{position:fixed;pointer-events:none;z-index:2}
 #hud .l{display:flex;flex-direction:column;gap:1px;text-shadow:0 1px 3px rgba(0,0,0,.7)}
+#hudR{position:fixed;pointer-events:none;display:flex;gap:6px;align-items:center;z-index:2}
 #score{font-weight:900;font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
-#sub{font-size:12px;opacity:.9;font-variant-numeric:tabular-nums}
-#hud .r{display:flex;gap:6px;align-items:center}
+#sub{font-size:12px;opacity:.9;font-variant-numeric:tabular-nums;line-height:1.45}
+#hud.land #score{font-size:30px}
+#hud.land #sub{font-size:13px;white-space:pre-line;line-height:1.6;margin-top:4px}
+#vbar.land{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+#vbar.land button{padding:8px 2px;font-size:11px;white-space:nowrap}
+#hudR.land{justify-content:center}
 #lives{font-size:15px;letter-spacing:3px;margin-right:4px;text-shadow:0 1px 3px rgba(0,0,0,.7)}
 .ib{pointer-events:auto;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(10,10,16,.45);color:#fff;font:700 13px 'Zen Kaku Gothic New',sans-serif;display:grid;place-items:center;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);cursor:pointer}
 .overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:radial-gradient(ellipse at center,rgba(8,8,14,.30),rgba(8,8,14,.78));z-index:5}
@@ -39,8 +44,25 @@ h2{font-family:'Zen Kaku Gothic New',system-ui,sans-serif;font-weight:900;font-s
 @keyframes pulse{50%{box-shadow:0 0 0 4px rgba(255,210,90,.6)}}
 #vid{position:fixed;left:0;top:0;width:2px;height:2px;opacity:0;pointer-events:none}
 .note{font-size:11px;opacity:.6}
-.clipbox{width:100%;display:flex;flex-direction:column;align-items:center;gap:8px}
-#rClip{width:auto;max-width:100%;max-height:44vh;border-radius:12px;background:#000;display:block}
+#result{padding:12px 14px}
+.rcard{width:100%;height:100%;max-width:520px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center}
+.rhead{display:flex;flex-direction:column;align-items:center;gap:3px}
+.rlab{font-size:13px;font-weight:700;opacity:.7;letter-spacing:.3em}
+.rhead .big{font-size:46px}
+.rclip{width:100%;min-height:0;display:flex;flex-direction:column;align-items:center}
+.clipbox{width:100%;display:flex;flex-direction:column;align-items:center;gap:6px}
+#rClipSound{margin-left:10px}
+#rClip{display:block;max-width:100%;width:auto;height:auto;border-radius:12px;background:#000}
+.rinfo{width:100%;display:flex;flex-direction:column;align-items:center;gap:6px}
+.rbtns{display:flex;gap:8px;width:100%}
+.rbtns .btn{flex:1 1 0;max-width:none;padding:12px 6px;font-size:14px}
+@media (orientation:landscape){
+  .rcard{max-width:1000px;display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);grid-template-rows:auto auto;column-gap:18px;row-gap:12px;align-content:center;justify-items:stretch}
+  .rclip{grid-column:1;grid-row:1/span 2;align-self:center}
+  .rhead{grid-column:2;grid-row:1;align-self:end}
+  .rinfo{grid-column:2;grid-row:2;align-self:start}
+  .rbtns{flex-direction:column}
+}
 @media (max-height:470px){h1{font-size:40px;margin-bottom:2px}.card{gap:7px}.btn{padding:9px 14px;font-size:15px}.how{line-height:1.55}.big{font-size:36px}h2{font-size:28px}}
 </style>
 </head>
@@ -49,8 +71,8 @@ h2{font-family:'Zen Kaku Gothic New',system-ui,sans-serif;font-weight:900;font-s
 
 <div id="hud" class="hidden">
   <div class="l"><div id="score">0</div><div id="sub"></div></div>
-  <div class="r"><div id="lives"></div><button class="ib" id="bMute" aria-label="音">音</button><button class="ib" id="bPause" aria-label="一時停止">❚❚</button></div>
 </div>
+<div id="hudR" class="hidden"><div id="lives"></div><button class="ib" id="bMute" aria-label="音">音</button><button class="ib" id="bPause" aria-label="一時停止">❚❚</button></div>
 
 <div id="vbar" class="hidden">
   <button id="vFlip">⇄ 左右反転</button>
@@ -79,21 +101,20 @@ h2{font-family:'Zen Kaku Gothic New',system-ui,sans-serif;font-weight:900;font-s
 </div>
 
 <div id="result" class="overlay hidden">
-  <div class="card">
-    <h2>結果</h2>
-    <div class="big" id="rScore">0</div>
-    <div class="how" id="rBest"></div>
-    <div class="how" id="rClipWait"></div>
-    <div id="rClipBox" class="hidden clipbox">
-      <div class="how">今回のハイライト</div>
-      <video id="rClip" playsinline muted loop></video>
-      <div class="note" id="rClipSound"></div>
-      <div class="how" id="rClipText"></div>
-      <button class="btn" id="rSave">この動画を保存</button>
+  <div class="rcard">
+    <div class="rhead"><div class="rlab">結果</div><div class="big" id="rScore">0</div><div class="how" id="rBest"></div></div>
+    <div class="rclip">
+      <div class="how" id="rClipWait"></div>
+      <div id="rClipBox" class="hidden clipbox">
+        <div class="how">今回のハイライト<span class="note" id="rClipSound"></span></div>
+        <video id="rClip" playsinline muted loop></video>
+        <div class="how" id="rClipText"></div>
+      </div>
+    </div>
+    <div class="rinfo">
+      <div class="rbtns"><button class="btn" id="rSave">保存</button><button class="btn primary" id="rAgain">もう一度</button><button class="btn" id="rTitle">タイトルへ</button></div>
       <div class="note" id="rSaveNote"></div>
     </div>
-    <button class="btn primary" id="rAgain">もう一度</button>
-    <button class="btn" id="rTitle">タイトルへ</button>
   </div>
 </div>
 
@@ -148,26 +169,58 @@ function viewSize(){
   const r=cv.getBoundingClientRect();
   return [Math.round(r.width)||innerWidth, Math.round(r.height)||innerHeight];
 }
+let LAND=false;
+const BAR=68, PANEL=140;
+let PW=0, PX=0;
+// ボタンやスコアの配置
+// 横向き：左の黒幕にスコアと技（1行ずつ）、窓の下の帯に設定ボタンと「音・一時停止」。窓には何も重ねない
+// 縦向き：窓の上にスコアと「音・一時停止」、窓の下に設定ボタン
+function layoutUI(){
+  if(!VW) return;
+  const pad=Math.max(10,FW+6), hud=$('hud'), hr=$('hudR'), vb=$('vbar');
+  hud.classList.toggle('land',LAND); vb.classList.toggle('land',LAND);
+  const rw=hr.getBoundingClientRect().width||84, right=SW-(VX+VW)+pad;
+  hr.classList.toggle('land',LAND);
+  if(LAND){
+    const px=PX+10, pw=Math.max(60,PW-20);
+    hud.style.left=px+'px'; hud.style.width=pw+'px'; hud.style.top=Math.max(8,VY+8)+'px'; hud.style.bottom='auto';
+    hr.style.left=px+'px'; hr.style.right='auto'; hr.style.width=pw+'px'; hr.style.top='auto'; hr.style.bottom='16px';
+    vb.style.left=px+'px'; vb.style.right='auto'; vb.style.width=pw+'px'; vb.style.top='auto'; vb.style.bottom=(16+38+8)+'px';
+  }else{
+    hr.style.left='auto'; hr.style.width='auto'; vb.style.bottom='auto';
+    hud.style.left=(VX+pad)+'px'; hud.style.width=Math.max(60,VW-2*pad-rw-10)+'px';
+    if(VY>70){const bt=(SH-VY+6)+'px';hud.style.top='auto';hud.style.bottom=bt;hr.style.top='auto';hr.style.bottom=bt;}
+    else{hud.style.bottom='auto';hud.style.top=(VY+pad)+'px';hr.style.bottom='auto';hr.style.top=(VY+pad)+'px';}
+    hr.style.right=right+'px';
+    if(SH-(VY+VH)>60){vb.style.right='auto';vb.style.left=(VX+pad)+'px';vb.style.width=(VW-2*pad)+'px';vb.style.top=(VY+VH+14)+'px';}
+    else{vb.style.left='auto';vb.style.width='auto';vb.style.right=right+'px';vb.style.top=(VY+VH-pad-40)+'px';}
+  }
+}
 function resize(force){
   const [w,h]=viewSize(), dpr=Math.min(window.devicePixelRatio||1,2);
   if(force!==true&&w===SW&&h===SH&&dpr===DPR) return;
   DPR=dpr; SW=w; SH=h;
   cv.width=Math.round(SW*DPR); cv.height=Math.round(SH*DPR);
+  // 横向きの時は、窓の下にボタン用の帯（窓の外）をとる
+  LAND=SW/SH>=1.2;
   const a=SW/SH, amin=1.45, amax=2.3;
-  if(a<amin){VW=SW;VH=SW/amin;}
-  else if(a>amax){VH=SH;VW=SH*amax;}
-  else{VW=SW;VH=SH;}
-  VX=(SW-VW)/2; VY=(SH-VH)/2;
-  if(a<amin) VY=Math.max(SH*0.2,(SH-VH)/2-SH*0.04);
+  if(LAND){
+    // 窓の縦横比は縦向きと同じ（1.45）。空いた左側を黒幕にして、スコア・技・ボタンをまとめる
+    VH=SH; VW=VH*amin;
+    if(SW-VW<PANEL){VW=SW-PANEL;VH=VW/amin;}
+    PW=Math.min(Math.max(PANEL,SW-VW),260); PX=Math.max(0,(SW-PW-VW)/2);
+    VX=PX+PW; VY=(SH-VH)/2;
+  }else{
+    if(a<amin){VW=SW;VH=SW/amin;}
+    else if(a>amax){VH=SH;VW=SH*amax;}
+    else{VW=SW;VH=SH;}
+    VX=(SW-VW)/2; VY=(SH-VH)/2;
+    if(a<amin) VY=Math.max(SH*0.2,(SH-VH)/2-SH*0.04);
+  }
   S=VH/LH; LW=VW/S; TX=LW*0.28;
   SC.width=Math.max(2,Math.round(VW*DPR)); SC.height=Math.max(2,Math.round(VH*DPR));
   RR=Math.min(VW,VH)*0.07; FW=Math.max(7,VH*0.022);
-  const pad=Math.max(10,FW+6);
-  const hud=$('hud'), vb=$('vbar');
-  hud.style.left=(VX+pad)+'px'; hud.style.width=(VW-2*pad)+'px';
-  hud.style.top=(VY>70?VY-56:VY+pad)+'px';
-  if(SH-(VY+VH)>60){vb.style.left=(VX+pad)+'px';vb.style.width=(VW-2*pad)+'px';vb.style.top=(VY+VH+14)+'px';}
-  else{const side=Math.min(190,VW*.22);vb.style.left=(VX+side)+'px';vb.style.width=(VW-2*side)+'px';vb.style.top=(VY+pad+2)+'px';}
+  layoutUI(); layoutResult();
   $('rot').classList.toggle('hidden',SW>=SH);
   if(mode==='vision') setupAna();
 }
@@ -1057,13 +1110,13 @@ function renderParts(P,which){
 }
 function drawFrame(){
   ctx.setTransform(DPR,0,0,DPR,0,0);
-  if(VX>0.5||VY>0.5){
+  if(VX>0.5||VY>0.5||SH-(VY+VH)>0.5){
     const g=ctx.createLinearGradient(0,0,0,SH);g.addColorStop(0,'#18181f');g.addColorStop(1,'#0a0a0e');
     ctx.fillStyle=g;ctx.beginPath();ctx.rect(0,0,SW,SH);
     ctx.moveTo(VX+RR,VY);ctx.arcTo(VX,VY,VX,VY+RR,RR);ctx.lineTo(VX,VY+VH-RR);ctx.arcTo(VX,VY+VH,VX+RR,VY+VH,RR);
     ctx.lineTo(VX+VW-RR,VY+VH);ctx.arcTo(VX+VW,VY+VH,VX+VW,VY+VH-RR,RR);ctx.lineTo(VX+VW,VY+RR);ctx.arcTo(VX+VW,VY,VX+VW-RR,VY,RR);ctx.closePath();
     ctx.fill('evenodd');
-    if(SH-(VY+VH)>60){const y=VY+VH+FW+26;ctx.fillStyle='#1d1d25';rrPath(SW*.08,y,SW*.84,18,9);ctx.fill();ctx.fillStyle='rgba(255,255,255,.05)';ctx.fillRect(SW*.1,y+2,SW*.8,1.5);}
+    if(!LAND&&SH-(VY+VH)>60){const y=VY+VH+FW+26;ctx.fillStyle='#1d1d25';rrPath(SW*.08,y,SW*.84,18,9);ctx.fill();ctx.fillStyle='rgba(255,255,255,.05)';ctx.fillRect(SW*.1,y+2,SW*.8,1.5);}
   }
   ctx.lineWidth=FW;ctx.strokeStyle='#07070a';rrPath(VX,VY,VW,VH,RR);ctx.stroke();
   ctx.lineWidth=1.5;ctx.strokeStyle='rgba(255,255,255,.09)';rrPath(VX+FW/2,VY+FW/2,VW-FW,VH-FW,Math.max(2,RR-FW/2));ctx.stroke();
@@ -1107,9 +1160,11 @@ function showUI(){
   $('over').classList.toggle('hidden',state!=='over');
   $('result').classList.toggle('hidden',state!=='result');
   $('hud').classList.toggle('hidden',state==='title'||state==='result');
+  $('hudR').classList.toggle('hidden',state==='title'||state==='result');
   $('vbar').classList.toggle('hidden',!(mode==='vision'&&(state==='play'||state==='paused')));
   syncMuteBtn();
   hudKey='';
+  layoutUI();
 }
 function syncMuteBtn(){const off=mode==='vision'?vidMuted:muted,b=$('bMute');b.textContent=off?'消':'音';b.style.opacity=off?.45:1;b.classList.toggle('hidden',mode==='vision'&&!!stream);}
 function startGame(){
@@ -1136,8 +1191,8 @@ function updHUD(){
   const onLow=ninja.gr&&ninja.it&&ninja.it.kind==='rail';
   const sub=mode==='proc'?(gtime<5?`${songName?'♪ '+songName+' ・ ':''}ガードレールを走ると得点×2・溜めて大ジャンプ`:`${Math.floor(dist)} m ・ ${Math.round(v/7)} km/h${onLow?' ・ 低空×2':''}${ninja.charged?' ・ 溜め完了':''}`):(trickT>0?trickText:'フリープレイ');
   const lv=mode==='proc'?'✦'.repeat(Math.max(0,lives)):'';
-  const k=score+'|'+sub+'|'+lv; if(k===hudKey) return; hudKey=k;
-  $('score').textContent=score; $('sub').textContent=sub; $('lives').textContent=lv;
+  const k=score+'|'+sub+'|'+lv+'|'+LAND; if(k===hudKey) return; hudKey=k;
+  $('score').textContent=score; $('sub').textContent=LAND?sub.replace(/ ・ /g,'\n').replace(/　/g,'\n'):sub; $('lives').textContent=lv;
 }
 
 /* ---------- 入力 ---------- */
@@ -1339,10 +1394,23 @@ function showResult(){
     $('rSaveNote').textContent=canSave()?'':'ここでは保存できません。GitHub Pagesに置いた版なら保存できます。';
     $('rSave').classList.toggle('hidden',!canSave());
     box.classList.remove('hidden');
+    v2.onloadedmetadata=layoutResult;
   }else{
-    box.classList.add('hidden');
+    box.classList.add('hidden'); $('rSave').classList.add('hidden'); $('rSaveNote').textContent='';
     wait.textContent=recSupported()?'今回は録画できる技がありませんでした':'この端末・ブラウザは録画に対応していません';
     wait.classList.remove('hidden');
+  }
+  layoutResult();
+}
+// ハイライト動画の大きさを、ほかの表示とボタンが画面内に収まるように決める
+function layoutResult(){
+  if(state!=='result') return;
+  const v2=$('rClip'), H=SH||innerHeight, W=SW||innerWidth;
+  if(W>H){ v2.style.maxHeight=Math.max(120,H-90)+'px'; }
+  else{
+    const q=sel=>{const e=document.querySelector(sel);return e?e.offsetHeight:0;};
+    const other=q('.rhead')+q('.rinfo')+$('rClipText').offsetHeight+28+3*10+24;
+    v2.style.maxHeight=Math.max(110,H-other)+'px';
   }
 }
 // Claudeアプリ内では downloads 機能（保存の確認画面→iPhoneなら共有シートから写真に保存）を使う
@@ -1375,7 +1443,7 @@ function endSession(){
   let bv=0; try{bv=+localStorage.getItem('shasou-ninja-best-v')||0;}catch(e){}
   const nb=score>bv&&score>0; if(nb){try{localStorage.setItem('shasou-ninja-best-v',String(score));}catch(e){}}
   $('rScore').textContent=score; $('rBest').textContent=nb?'自己ベスト更新！':`自己ベスト ${bv}`;
-  $('rClipBox').classList.add('hidden'); const w=$('rClipWait'); w.textContent='今回のハイライトを準備中…'; w.classList.remove('hidden');
+  $('rClipBox').classList.add('hidden'); $('rSave').classList.add('hidden'); $('rSaveNote').textContent=''; const w=$('rClipWait'); w.textContent='今回のハイライトを準備中…'; w.classList.remove('hidden');
   showUI();
   recFinish(showResult);
 }

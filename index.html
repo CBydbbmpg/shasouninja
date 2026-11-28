@@ -64,7 +64,23 @@ h2{font-family:'Zen Kaku Gothic New',system-ui,sans-serif;font-weight:900;font-s
   .rinfo{grid-column:2;grid-row:2;align-self:start}
   .rbtns{flex-direction:column}
 }
-@media (max-height:470px){h1{font-size:40px;margin-bottom:2px}.card{gap:7px}.btn{padding:9px 14px;font-size:15px}.how{line-height:1.55}.big{font-size:36px}h2{font-size:28px}}
+.trow{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:2px}
+.tbtn{padding:8px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.2);background:transparent;color:#fff;font:700 12.5px 'Zen Kaku Gothic New',sans-serif;opacity:.85;cursor:pointer;white-space:nowrap}
+.tbtn.on{background:rgba(224,48,58,.85);border-color:transparent;opacity:1}
+#help{z-index:8;background:rgba(8,8,14,.86)}
+.hcard{width:100%;max-width:540px;max-height:100%;display:flex;flex-direction:column;gap:10px;background:#16161f;border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:14px 14px 12px}
+.hbody{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior:contain;text-align:left;font-size:13px;line-height:1.75;padding:2px 6px}
+.hbody h3{font-size:17px;font-weight:900;margin:4px 0 6px;letter-spacing:.04em}
+.hbody h3+h4{margin-top:4px}
+.hbody h4{font-size:13.5px;font-weight:700;margin:14px 0 4px;color:#ffd9dc}
+.hbody ul{margin:0;padding-left:1.25em}
+.hbody li{margin:1px 0}
+.hbody p{margin:4px 0}
+.hbody .sec{margin-top:22px;padding-top:14px;border-top:1px solid rgba(255,255,255,.12)}
+.hcard .btn{max-width:none;flex:0 0 auto}
+.rcard.norec .rclip{display:none}
+@media (orientation:landscape){.rcard.norec{display:flex;flex-direction:column;max-width:520px}.rcard.norec .rbtns{flex-direction:row}}
+@media (max-height:470px){.tbtn{padding:6px 11px}h1{font-size:40px;margin-bottom:2px}.card{gap:7px}.btn{padding:9px 14px;font-size:15px}.how{line-height:1.55}.big{font-size:36px}h2{font-size:28px}}
 </style>
 </head>
 <body>
@@ -90,6 +106,7 @@ h2{font-family:'Zen Kaku Gothic New',system-ui,sans-serif;font-weight:900;font-s
     <button class="btn" id="bCam">カメラで遊ぶ <small>車窓にかざしてリアルタイム</small></button>
     <div id="tmsg" class="msg hidden"></div>
     <div class="how">タップ：ジャンプ（空中でもう一回）<br>下スワイプ：下のラインへ降りる</div>
+    <div class="trow"><button class="tbtn" id="bRec">ハイライト録画：オフ</button><button class="tbtn" id="bHelp">遊び方・動画の扱い</button></div>
     <div class="note" id="rot">横向きにすると窓が大きくなります</div>
   </div>
 </div>
@@ -117,6 +134,61 @@ h2{font-family:'Zen Kaku Gothic New',system-ui,sans-serif;font-weight:900;font-s
       <div class="rbtns"><button class="btn" id="rSave">保存</button><button class="btn primary" id="rAgain">もう一度</button><button class="btn" id="rTitle">タイトルへ</button></div>
       <div class="note" id="rSaveNote"></div>
     </div>
+  </div>
+</div>
+
+<div id="help" class="overlay hidden">
+  <div class="hcard">
+    <div class="hbody" id="hBody">
+      <h3>遊び方</h3>
+      <h4>■ はじめ方</h4>
+      <ul>
+        <li>車窓動画で遊ぶ：撮っておいた車窓の動画を選びます</li>
+        <li>カメラで遊ぶ：スマホを車窓にかざすと、いま見えている景色で遊べます</li>
+        <li>横向きにすると窓が大きくなります</li>
+      </ul>
+      <h4>■ 操作（窓の中で）</h4>
+      <ul>
+        <li>タップ：ジャンプ（空中でもう一回ジャンプできます）</li>
+        <li>下スワイプ：下のラインへ降ります（空中なら急降下）</li>
+        <li>景色の中の電線・屋根・山の稜線などが、乗れるラインになります</li>
+        <li>一番下には常に地面があるので、落ちてもゲームオーバーにはなりません</li>
+      </ul>
+      <h4>■ スコア</h4>
+      <p>技を決めると点が入ります。</p>
+      <ul>
+        <li>乗り移り：別のラインへ飛び移る</li>
+        <li>大跳躍：大きく上のラインへ跳ぶ</li>
+        <li>急降下：大きく下のラインへ降りる</li>
+        <li>ギリギリ：ラインの端で踏み切る／端に着地する</li>
+        <li>一点着地：短いラインに着地する</li>
+        <li>綱渡り：電線のような細いラインを走る</li>
+        <li>疾走物乗り：速く流れるラインに乗る</li>
+      </ul>
+      <p>地面に降りずに技をつなぐと、倍率が上がります（最大×3）。地面に降りるか、しばらく技がないと途切れます。同じ技ばかりだと点が下がります。</p>
+      <h4>■ ボタン</h4>
+      <ul>
+        <li>⇄ 左右反転：景色が左から右へ流れるとき（反対側の席から撮った動画など）</li>
+        <li>検出ライン：乗れるラインの表示／非表示</li>
+        <li>感度：ラインの見つけやすさ（低・中・高）</li>
+        <li>音：動画の音のオン／オフ</li>
+        <li>❚❚：一時停止</li>
+        <li>終了：ゲームを終えて結果へ</li>
+      </ul>
+      <div class="sec">
+        <h3>動画・カメラ映像の扱い</h3>
+        <ul>
+          <li>選んだ動画やカメラの映像は、このスマホの中だけで処理されます。インターネットに送られたり、どこかに保存されたりすることはありません。</li>
+          <li>インターネットを使うのは、最初にゲームを読み込むときだけです。</li>
+          <li>カメラは景色を読み取るためだけに使います。マイクは使いません。</li>
+          <li>ハイライト録画（オンのとき）：プレイ中にいちばんスコアを積み上げた数秒を自動で録画し、終了後に見返せます。録画は端末の中に一時的に置かれるだけで、「保存」を押さなければ、次のプレイやタイトルに戻った時点で消えます。</li>
+          <li>「保存」を押すと、共有メニューから写真アプリなどに保存できます。どこに保存・送信するかは自分で選べます。</li>
+          <li>動画の音を出して遊んでいるときは、ハイライトにも音が入ります（カメラで遊ぶときは音なし）。</li>
+          <li>録画したくない場合は、タイトル画面で「ハイライト録画」をオフにしてください。オフの間は録画そのものをしません。</li>
+        </ul>
+      </div>
+    </div>
+    <button class="btn primary" id="hClose">閉じる</button>
   </div>
 </div>
 
@@ -161,6 +233,8 @@ function h1(n){const s=Math.sin(n*127.1+311.7)*43758.5453;return s-Math.floor(s)
 let state='title', mode='proc';
 let v=300, dist=0, base=0, score=0, bonus=0, lives=3, combo=0, lastKind='', best=0, gtime=0;
 try{best=+localStorage.getItem('shasou-ninja-best')||0;}catch(e){}
+// ハイライト録画（初期値はオフ。オフの間は録画そのものをしない）
+let recOn=false; try{recOn=localStorage.getItem('shasou-ninja-rec')==='1';}catch(e){}
 const crows=[], parts=[], pops=[];
 let crowT=6, slAcc=0;
 
@@ -1249,6 +1323,12 @@ setInterval(()=>resize(),1000);   // 念のため1秒ごとに実寸を確認（
 $('bVideo').onclick=()=>{initAudio();$('file').click();};
 $('file').onchange=e=>{const f=e.target.files&&e.target.files[0];e.target.value='';if(f)startVideoFile(f);};
 $('bCam').onclick=startCamera;
+function syncRecBtn(){const b=$('bRec');b.textContent='ハイライト録画：'+(recOn?'オン':'オフ');b.classList.toggle('on',recOn);}
+syncRecBtn();
+$('bRec').onclick=()=>{recOn=!recOn;try{localStorage.setItem('shasou-ninja-rec',recOn?'1':'0');}catch(e){}syncRecBtn();};
+$('bHelp').onclick=()=>{$('help').classList.remove('hidden');$('hBody').scrollTop=0;};
+$('hClose').onclick=()=>{$('help').classList.add('hidden');};
+$('help').addEventListener('click',e=>{if(e.target===$('help'))$('help').classList.add('hidden');});
 $('pRes').onclick=togglePause; $('pTitle').onclick=toTitle;
 $('oRetry').onclick=startGame; $('oTitle').onclick=toTitle;
 $('bPause').onclick=togglePause;
@@ -1333,7 +1413,7 @@ function recAbort(){
 }
 function recStart(){
   recAbort();
-  if(!recSupported()) return;
+  if(!recOn||!recSupported()) return;
   try{
     const RW=Math.min(960,Math.round(VW*DPR/2)*2)||960, RH=Math.round(RW*LH/LW/2)*2;
     REC.cv=document.createElement('canvas');REC.cv.width=RW;REC.cv.height=RH;REC.ctx=REC.cv.getContext('2d');
@@ -1400,6 +1480,7 @@ function recFinish(cb){
 function showResult(){
   const box=$('rClipBox'), wait=$('rClipWait'), v2=$('rClip');
   wait.classList.add('hidden');
+  if(!recOn){box.classList.add('hidden');$('rSave').classList.add('hidden');$('rSaveNote').textContent='';layoutResult();return;}
   if(REC.best){
     if(REC.url) URL.revokeObjectURL(REC.url);
     REC.url=URL.createObjectURL(REC.best.blob);
@@ -1462,7 +1543,8 @@ function endSession(){
   let bv=0; try{bv=+localStorage.getItem('shasou-ninja-best-v')||0;}catch(e){}
   const nb=score>bv&&score>0; if(nb){try{localStorage.setItem('shasou-ninja-best-v',String(score));}catch(e){}}
   $('rScore').textContent=score; $('rBest').textContent=nb?'自己ベスト更新！':`自己ベスト ${bv}`;
-  $('rClipBox').classList.add('hidden'); $('rSave').classList.add('hidden'); $('rSaveNote').textContent=''; const w=$('rClipWait'); w.textContent='今回のハイライトを準備中…'; w.classList.remove('hidden');
+  $('rClipBox').classList.add('hidden'); $('rSave').classList.add('hidden'); $('rSaveNote').textContent=''; const w=$('rClipWait'); w.textContent='今回のハイライトを準備中…'; w.classList.toggle('hidden',!recOn);
+  document.querySelector('.rcard').classList.toggle('norec',!recOn);
   showUI();
   recFinish(showResult);
 }
